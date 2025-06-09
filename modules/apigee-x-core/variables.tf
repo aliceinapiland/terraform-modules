@@ -39,7 +39,7 @@ variable "ax_region" {
 variable "disable_vpc_peering" {
   description = "Flag that specifies whether the VPC Peering through Private Service Access (Service Networking) should be disabled between the consumer network and Apigee."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "network" {
@@ -51,7 +51,7 @@ variable "network" {
 variable "billing_type" {
   description = "Billing type of the Apigee organization."
   type        = string
-  default     = null
+  default     = "PAYG"
 }
 
 variable "apigee_envgroups" {
@@ -104,7 +104,7 @@ variable "org_key_rotation_period" {
 variable "org_kms_keyring_name" {
   description = "Name of the KMS Key Ring for Apigee Organization DB."
   type        = string
-  default     = "apigee-x-org"
+  default     = "apigee-x-org-kr"
 }
 
 variable "org_kms_keyring_location" {
