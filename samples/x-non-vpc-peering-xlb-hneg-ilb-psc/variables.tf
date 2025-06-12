@@ -15,56 +15,64 @@
  */
 
 variable "project_id" {
-  description = "Project id (also used for the Apigee Organization)."
+  description = "The unique identifier for the Google Cloud project. This ID will also be used for the Apigee Organization if project_create is true."
   type        = string
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{4,28}[a-z0-9]$", var.project_id))
+    error_message = "Project ID must start with a lowercase letter, followed by 4 to 28 lowercase letters, digits, or hyphens, and end with a lowercase letter or digit."
+  }
 }
 
 variable "billing_account" {
-  description = "Billing account id."
+  description = "The ID of the billing account to associate with the project. Required if project_create is true."
   type        = string
   default     = null
 }
 
 variable "project_create" {
-  description = "Create project. When set to false, uses a data source to reference existing project."
+  description = "Set to true to create a new Google Cloud project. If false, an existing project_id must be provided."
   type        = bool
   default     = false
 }
 
 variable "project_parent" {
-  description = "Parent folder or organization in 'folders/folder_id' or 'organizations/org_id' format."
+  description = "The parent resource for the new project, specified in 'folders/folder_id' or 'organizations/org_id' format. Required if project_create is true."
   type        = string
   default     = null
   validation {
-    condition     = var.project_parent == null || can(regex("(organizations|folders)/[0-9]+", var.project_parent))
+    condition     = var.project_parent == null || can(regex("^(organizations|folders)/[0-9]+$", var.project_parent))
     error_message = "Parent must be of the form folders/folder_id or organizations/organization_id."
   }
 }
 
 variable "ax_region" {
-  description = "GCP region for storing Apigee analytics data (see https://cloud.google.com/apigee/docs/api-platform/get-started/install-cli)."
+  description = "The Google Cloud region for storing Apigee analytics data. See https://cloud.google.com/apigee/docs/api-platform/get-started/install-cli for valid regions."
   type        = string
+  validation {
+    condition     = can(regex("^[a-z]+-[a-z0-9]+[0-9]$", var.ax_region))
+    error_message = "Invalid GCP region format. Must be something like 'us-east1'."
+  }
 }
 
 variable "apigee_instances" {
-  description = "Apigee Instances (only one instance for EVAL orgs)."
+  description = "A map of Apigee instances to create. For EVAL organizations, only one instance is typically allowed. Each instance object defines its GCP region and associated environments."
   type = map(object({
     region       = string
     environments = list(string)
   }))
-  default = null
+  default = {}
 }
 
 variable "apigee_envgroups" {
-  description = "Apigee Environment Groups."
+  description = "A map of Apigee Environment Groups to create. Each group object defines a list of hostnames associated with it."
   type = map(object({
     hostnames = list(string)
   }))
-  default = null
+  default = {}
 }
 
 variable "apigee_environments" {
-  description = "Apigee Environments."
+  description = "A map of Apigee Environments to create. Each environment object defines properties like display name, description, node configuration, IAM bindings, associated environment groups, and type."
   type = map(object({
     display_name = optional(string)
     description  = optional(string)
@@ -74,220 +82,356 @@ variable "apigee_environments" {
     }))
     iam       = optional(map(list(string)))
     envgroups = list(string)
-    type      = optional(string)
+    type      = optional(string) # APIHUB, CONTROL_PLANE, ANALYTICS_AGENT, CONFIG_DEPLOYMENT, MESSAGE_PROCESSOR
   }))
-  default = null
+  default = {}
 }
 
 /**
-* Below are the variables required for creating XLB -> Hybrid NEG -> Regional ILB -> PSC NEG -> Apigee PSC Service Attachment.
+* Networking variables for XLB -> Hybrid NEG -> Regional ILB -> PSC NEG -> Apigee PSC Service Attachment.
 */
 
 variable "region1" {
-  description = "The GCP region for regional resources (e.g., 'us-central1')."
+  description = "The primary GCP region for deploying regional resources like subnets and load balancers (e.g., 'us-east1')."
   type        = string
   default     = "us-east1"
+  validation {
+    condition     = can(regex("^[a-z]+-[a-z0-9]+[0-9]$", var.region1))
+    error_message = "Invalid GCP region format. Must be something like 'us-east1'."
+  }
 }
 
 variable "region1-zone1" {
-  description = "The GCP zone for the Hybrid NEG (e.g., 'us-central1-a'). This should be a zone within the specified region."
+  description = "The GCP zone within region1 for deploying zonal resources like the Hybrid NEG (e.g., 'us-east1-b')."
   type        = string
   default     = "us-east1-b"
+  validation {
+    # Basic check; does not guarantee zone is in region1.
+    condition     = can(regex("^[a-z]+-[a-z0-9]+[0-9]-[a-z]$", var.region1-zone1))
+    error_message = "Invalid GCP zone format. Must be something like 'us-east1-b'."
+  }
 }
 
 variable "network_name" {
-  description = "The name of the VPC network to create."
+  description = "The name for the VPC network. Must comply with GCP naming conventions."
   type        = string
   default     = "apigee-nb-nw"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.network_name))
+    error_message = "Invalid network name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-subnet-name" {
-  description = "The name of the VPC network to create."
+  description = "The name for the subnet in region1. Must comply with GCP naming conventions."
   type        = string
   default     = "apigee-nb-nw-subnet-us-east1"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-subnet-name))
+    error_message = "Invalid subnet name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-subnet-iprange" {
-  description = "IP range for us-east1 subnet"
-  type = string
-  default = "10.1.0.0/23"
+  description = "The primary IPv4 address range for the subnet in region1, in CIDR notation (e.g., '10.1.0.0/23')."
+  type        = string
+  default     = "10.1.0.0/23"
+  validation {
+    condition     = can(regex("^(\\d{1,3}\\.){3}\\d{1,3}/(\\d|[1-2]\\d|3[0-2])$", var.region1-subnet-iprange))
+    error_message = "Invalid IP CIDR range format. Must be like '10.1.0.0/23'."
+  }
 }
 
 variable "region1-pos-iprange" {
-  description = "IP range for us-east1 proxy only subnet"
-  type = string
-  default = "10.3.0.0/23"
+  description = "The IPv4 address range for the proxy-only subnet in region1, in CIDR notation (e.g., '10.3.0.0/23'). This is used by the Regional Internal Load Balancer."
+  type        = string
+  default     = "10.3.0.0/23"
+  validation {
+    condition     = can(regex("^(\\d{1,3}\\.){3}\\d{1,3}/(\\d|[1-2]\\d|3[0-2])$", var.region1-pos-iprange))
+    error_message = "Invalid IP CIDR range format. Must be like '10.3.0.0/23'."
+  }
 }
 
 variable "us-west1-subnet-name" {
-  description = "The name of the VPC network to create."
+  description = "The name for the subnet in the us-west1 region (example for multi-region setup, can be adapted or removed). Must comply with GCP naming conventions."
   type        = string
   default     = "apigee-nb-nw-subnet-us-west1"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.us-west1-subnet-name))
+    error_message = "Invalid subnet name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-proxy_only_subnet_name" {
-  description = "The name of the proxy-only subnet in the specified region. Required for the Regional Internal Application Load Balancer."
+  description = "The name for the proxy-only subnet in region1. Required for the Regional Internal Application Load Balancer. Must comply with GCP naming conventions."
   type        = string
   default     = "apigee-nb-nw-us-east1-pos"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-proxy_only_subnet_name))
+    error_message = "Invalid subnet name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-psc-neg-name" {
-  description = "Name of the us-east1 PSC NEG that points to Apigee us-east1 Instance"
-  type = string
-  default = "apigee-us-east1-psc-neg"
+  description = "Name for the PSC Network Endpoint Group (NEG) in region1 that connects to the Apigee instance's service attachment. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-psc-neg"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-psc-neg-name))
+    error_message = "Invalid PSC NEG name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-apigee-psc_target_service_attachment_uri" {
-  description = "The URI of the target Service Attachment for the PSC NEG."
+  description = "The URI of the target Apigee Service Attachment for the PSC NEG in region1. Format: 'projects/SERVICE_PRODUCER_PROJECT/regions/REGION/serviceAttachments/MY_SERVICE_ATTACHMENT'."
   type        = string
   default     = "projects/p54d5feba6873adbap-tp/regions/us-east1/serviceAttachments/apigee-us-east1-giy9"
-  # Example: "projects/SERVICE_PRODUCER_PROJECT/regions/REGION/serviceAttachments/MY_SERVICE_ATTACHMENT"
+  validation {
+    condition     = can(regex("^projects/[^/]+/regions/[^/]+/serviceAttachments/[^/]+$", var.region1-apigee-psc_target_service_attachment_uri))
+    error_message = "Invalid Service Attachment URI format. Example: 'projects/sp-project/regions/us-east1/serviceAttachments/sa-name'."
+  }
 }
 
 variable "region1-ilb-hc-name" {
-    description = "Name of region 1 ILB healthcheck"
-    type = string
-    default = "apigee-us-east1-ilb-hc"
+  description = "Name for the health check used by the Regional Internal Load Balancer (ILB) in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-ilb-hc"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-ilb-hc-name))
+    error_message = "Invalid health check name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-ilb-bes-name" {
-    description = "Name of the region 1 ILB backend service"
-    type = string
-    default = "apigee-us-east1-ilb-bes"
+  description = "Name for the backend service of the Regional ILB in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-ilb-bes"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-ilb-bes-name))
+    error_message = "Invalid backend service name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-ilb-port" {
-  description = "Port for the Regional Internal Application Load Balancer and Hybrid NEG endpoint (backend communication)."
+  description = "Port number for the Regional Internal Load Balancer and the Hybrid NEG endpoint for backend communication."
   type        = number
   default     = 80
+  validation {
+    condition     = var.region1-ilb-port > 0 && var.region1-ilb-port <= 65535
+    error_message = "Port number must be between 1 and 65535."
+  }
 }
 
 variable "region1-ilb-urlmap-name" {
-  description = "Name of region 1 ILB url map"
-  type = string
-  default = "apigee-us-east1-ilb-urlmap"
+  description = "Name for the URL map of the Regional ILB in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-ilb-urlmap"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-ilb-urlmap-name))
+    error_message = "Invalid URL map name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-ilb-targetproxy-name" {
-    description = "Name of region 1 ILB target proxy"
-    type = string
-    default = "apigee-us-east1-ilb-targetproxy"
+  description = "Name for the target HTTP proxy of the Regional ILB in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-ilb-targetproxy"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-ilb-targetproxy-name))
+    error_message = "Invalid target proxy name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-ilb-ip-name" {
-    description = "Name of region 1 ILB IP address"
-    type = string
-    default = "apigee-us-east1-ilb-ip"
+  description = "Name for the static internal IP address for the Regional ILB in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-ilb-ip"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-ilb-ip-name))
+    error_message = "Invalid IP address name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-ilb-forwardingrule-name" {
-    description = "Name of region 1 ILB forwarding rule"
-    type = string
-    default = "apigee-us-east1-ilb-forwardingrule"
+  description = "Name for the forwarding rule of the Regional ILB in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-ilb-forwardingrule"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-ilb-forwardingrule-name))
+    error_message = "Invalid forwarding rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "region1-hybrid-neg-name" {
-    description = "Name of region 1 Hybrid NEG"
-    type = string
-    default = "apigee-us-east1-hybrid-neg"
+  description = "Name for the Hybrid Connectivity Network Endpoint Group (NEG) in region1. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-us-east1-hybrid-neg"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.region1-hybrid-neg-name))
+    error_message = "Invalid Hybrid NEG name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 
 variable "apigee-xlb-port" {
-  description = "Port for the External HTTPS Application Load Balancer (frontend)."
+  description = "Port number for the External HTTPS Application Load Balancer (frontend)."
   type        = number
-  default     = 443 # Changed to 443 for HTTPS
+  default     = 443
+  validation {
+    condition     = var.apigee-xlb-port > 0 && var.apigee-xlb-port <= 65535
+    error_message = "Port number must be between 1 and 65535."
+  }
 }
 
 variable "apigee-xlb-ip-name" {
-    description = "Name of static IP for external LB front end"
-    type = string
-    default = "apigee-xlb-ip"
+  description = "Name for the static global IP address used by the External Load Balancer frontend. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-ip"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-ip-name))
+    error_message = "Invalid IP address name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-xlb-ssl-certificate-name" {
-    description = "Name of apigee external LB SSL certificate"
-    type = string
-    default = "apigee-xlb-ssl-certificate"
+  description = "Name for the SSL certificate used by the External Load Balancer. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-ssl-certificate"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-ssl-certificate-name))
+    error_message = "Invalid SSL certificate name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-xlb-hc-tcp-name" {
-    description = "Name of apigee external LB healthcheck"
-    type = string
-    default = "apigee-xlb-hc-tcp"
+  description = "Name for the TCP health check used by the External Load Balancer. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-hc-tcp"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-hc-tcp-name))
+    error_message = "Invalid health check name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-xlb-bes-name" {
-    description = "Name of apigee external LB backend service"
-    type = string
-    default = "apigee-xlb-bes" 
+  description = "Name for the backend service of the External Load Balancer. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-bes"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-bes-name))
+    error_message = "Invalid backend service name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-xlb-urlmap-name" {
-    description = "Name of apigee external LB url map"
-    type = string
-    default = "apigee-xlb-urlmap"
+  description = "Name for the URL map of the External Load Balancer. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-urlmap"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-urlmap-name))
+    error_message = "Invalid URL map name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-xlb-https-targetproxy-name" {
-    description = "Name of apigee external LB target proxy"
-    type = string
-    default = "apigee-xlb-https-targetproxy"
+  description = "Name for the HTTPS target proxy of the External Load Balancer. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-https-targetproxy"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-https-targetproxy-name))
+    error_message = "Invalid target proxy name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-xlb-https-fwd-rule-name" {
-    description = "Name of apigee external LB forwarding rule"
-    type = string
-    default = "apigee-xlb-https-fwd-rule"
+  description = "Name for the HTTPS forwarding rule of the External Load Balancer. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-xlb-https-fwd-rule"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-xlb-https-fwd-rule-name))
+    error_message = "Invalid forwarding rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee_billing_type" {
-    default = "EVAL"
-  
+  description = "The billing type for the Apigee organization. Valid values are EVAL, PAYG, SUBSCRIPTION."
+  type        = string
+  default     = "EVAL"
+  validation {
+    condition     = contains(["EVAL", "PAYG", "SUBSCRIPTION"], var.apigee_billing_type)
+    error_message = "Invalid Apigee billing type. Must be one of: EVAL, PAYG, SUBSCRIPTION."
+  }
 }
 
 variable "apigee-vpc-fw-xlb-https-ingress-name" {
-  description = "Name for VPC firewall rule that allows Internet -> HTTPS into XLB"
+  description = "Name for the VPC firewall rule allowing HTTPS ingress from the internet to the External Load Balancer. Must comply with GCP naming conventions."
   type        = string
-  default     = "apigee-vpc-fw-xlb-https-ingress"  
+  default     = "apigee-vpc-fw-xlb-https-ingress"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-vpc-fw-xlb-https-ingress-name))
+    error_message = "Invalid firewall rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-vpc-fw-hneg-http-ingress-name" {
-  description = "Name for VPC firewall rule that allows XLB -> HTTP into Hybrid NEG -> Regional ILB"
-  type = string
-  default = "apigee-vpc-fw-hneg-http-ingress"
+  description = "Name for the VPC firewall rule allowing HTTP ingress from the XLB to the Hybrid NEG and Regional ILB. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-vpc-fw-hneg-http-ingress"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-vpc-fw-hneg-http-ingress-name))
+    error_message = "Invalid firewall rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-vpc-fw-psc-https-egress-name" {
-  description = "Name for VPC firewall rule that allows Regional ILB -> HTTPS into PSC NEG -> PSC Service Attachment for Apigee Instance"
-  type = string
-  default = "apigee-vpc-fw-psc-https-egress"
+  description = "Name for the VPC firewall rule allowing HTTPS egress from the Regional ILB to the PSC NEG and Apigee instance. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-vpc-fw-psc-https-egress"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-vpc-fw-psc-https-egress-name))
+    error_message = "Invalid firewall rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-vpc-fw-allow-health-check-ingress-name" {
-  description = "Name for VPC firewall rule that allows IPV4 based GCP health check probes to reach load balancers"
-  type = string
-  default = "apigee-vpc-fw-allow-health-check-ingress"
+  description = "Name for the VPC firewall rule allowing IPv4 GCP health check probes to reach load balancers. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-vpc-fw-allow-health-check-ingress"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-vpc-fw-allow-health-check-ingress-name))
+    error_message = "Invalid firewall rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 variable "apigee-vpc-fw-allow-health-check-ipv6-ingress-name" {
-  description = "Name for VPC firewall rule that allows IPV6 based GCP health check probes to reach load balancers"
-  type = string
-  default = "apigee-vpc-fw-allow-health-check-ipv6-ingress"
+  description = "Name for the VPC firewall rule allowing IPv6 GCP health check probes to reach load balancers. Must comply with GCP naming conventions."
+  type        = string
+  default     = "apigee-vpc-fw-allow-health-check-ipv6-ingress"
+  validation {
+    condition     = can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.apigee-vpc-fw-allow-health-check-ipv6-ingress-name))
+    error_message = "Invalid firewall rule name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+  }
 }
 
 # variable "psc_ingress_network" {
-#   description = "PSC ingress VPC name."
+#   description = "The name of the VPC network used for PSC ingress to Apigee services."
 #   type        = string
+#   # default = "psc-ingress-vpc" # Example default
+#   validation {
+#     condition     = var.psc_ingress_network == null || can(regex("^(?:[a-z](?:[-a-z0-9]{0,61}[a-z0-9])?)$", var.psc_ingress_network))
+#     error_message = "Invalid network name. Must be a lowercase string between 1 and 63 characters, starting with a letter, and can contain dashes and numbers."
+#   }
 # }
 
 # variable "psc_ingress_subnets" {
-#   description = "Subnets for exposing Apigee services via PSC"
+#   description = "A list of subnets for exposing Apigee services via Private Service Connect (PSC). Each subnet object defines its name, IP CIDR range, region, and optional secondary IP ranges."
 #   type = list(object({
-#     name               = string
-#     ip_cidr_range      = string
-#     region             = string
-#     secondary_ip_range = map(string)
+#     name               = string # Validate: GCP naming convention
+#     ip_cidr_range      = string # Validate: CIDR format
+#     region             = string # Validate: GCP region format
+#     secondary_ip_range = optional(map(string))
 #   }))
 #   default = []
+#   # Further validation can be added inside the object type if complex rules per field are needed,
+#   # or by using a custom validation rule iterating over the list.
 # }

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+// ax_region: The region for Apigee Analytics.
 ax_region = "us-east1"
 
+// apigee_instances: Defines Apigee instances.
+// Each instance has a region and a list of associated environments.
 apigee_instances = {
   use1-inst = {
     region       = "us-east1"
@@ -23,6 +26,8 @@ apigee_instances = {
   }
 }
 
+// apigee_environments: Defines Apigee environments.
+// Each environment has a display name, description, node configuration, IAM settings, associated environment groups, and type.
 apigee_environments = {
   dev-env = {
     display_name = "Dev-Env"
@@ -42,78 +47,114 @@ apigee_environments = {
   }
 }
 
+// apigee_envgroups: Defines Apigee environment groups.
+// Each environment group has a list of hostnames.
 apigee_envgroups = {
   test-env-grp = {
     hostnames = []
   }
 }
 
+// region1: The primary region for resources.
 region1 = "us-east1"
 
+// region1-zone1: The zone within the primary region.
 region1-zone1 = "us-east1-b"
 
+// network_name: The name of the network.
 network_name = "apigee-nb-nw"
 
+// region1-subnet-name: The name of the subnet in the primary region.
 region1-subnet-name = "apigee-nb-nw-subnet-us-east1"
 
+// region1-subnet-iprange: The IP range for the subnet in the primary region.
 region1-subnet-iprange = "10.1.0.0/23"
 
+// region1-pos-iprange: The IP range for the proxy-only subnet in the primary region.
 region1-pos-iprange = "10.3.0.0/23"
 
+// us-west1-subnet-name: The name of the subnet in the us-west1 region.
 us-west1-subnet-name = "apigee-nb-nw-subnet-us-west1"
 
+// region1-proxy_only_subnet_name: The name of the proxy-only subnet in the primary region.
 region1-proxy_only_subnet_name = "apigee-nb-nw-us-east1-pos"
 
+// region1-psc-neg-name: The name of the PSC NEG in the primary region.
 region1-psc-neg-name = "apigee-us-east1-psc-neg"
 
+// region1-apigee-psc_target_service_attachment_uri: The URI of the Apigee PSC target service attachment in the primary region.
 region1-apigee-psc_target_service_attachment_uri = "projects/p54d5feba6873adbap-tp/regions/us-east1/serviceAttachments/apigee-us-east1-giy9"
 
+// region1-ilb-hc-name: The name of the ILB health check in the primary region.
 region1-ilb-hc-name = "apigee-us-east1-ilb-hc"
 
+// region1-ilb-bes-name: The name of the ILB backend service in the primary region.
 region1-ilb-bes-name = "apigee-us-east1-ilb-bes"
 
+// region1-ilb-port: The port for the ILB in the primary region.
 region1-ilb-port = 80
 
+// region1-ilb-urlmap-name: The name of the ILB URL map in the primary region.
 region1-ilb-urlmap-name = "apigee-us-east1-ilb-urlmap"
 
+// region1-ilb-targetproxy-name: The name of the ILB target proxy in the primary region.
 region1-ilb-targetproxy-name = "apigee-us-east1-ilb-targetproxy"
 
+// region1-ilb-ip-name: The name of the ILB IP address in the primary region.
 region1-ilb-ip-name = "apigee-us-east1-ilb-ip"
 
+// region1-ilb-forwardingrule-name: The name of the ILB forwarding rule in the primary region.
 region1-ilb-forwardingrule-name = "apigee-us-east1-ilb-forwardingrule"
 
+// region1-hybrid-neg-name: The name of the hybrid NEG in the primary region.
 region1-hybrid-neg-name = "apigee-us-east1-hybrid-neg"
 
+// apigee-xlb-port: The port for the Apigee XLB.
 apigee-xlb-port = 443
 
+// apigee-xlb-ip-name: The name of the Apigee XLB IP address.
 apigee-xlb-ip-name = "apigee-xlb-ip"
 
+// apigee-xlb-ssl-certificate-name: The name of the Apigee XLB SSL certificate.
 apigee-xlb-ssl-certificate-name = "apigee-xlb-ssl-certificate"
 
+// apigee-xlb-hc-tcp-name: The name of the Apigee XLB TCP health check.
 apigee-xlb-hc-tcp-name = "apigee-xlb-hc-tcp"
 
+// apigee-xlb-bes-name: The name of the Apigee XLB backend service.
 apigee-xlb-bes-name = "apigee-xlb-bes"
 
+// apigee-xlb-urlmap-name: The name of the Apigee XLB URL map.
 apigee-xlb-urlmap-name = "apigee-xlb-urlmap"
 
+// apigee-xlb-https-targetproxy-name: The name of the Apigee XLB HTTPS target proxy.
 apigee-xlb-https-targetproxy-name = "apigee-xlb-https-targetproxy"
 
+// apigee-xlb-https-fwd-rule-name: The name of the Apigee XLB HTTPS forwarding rule.
 apigee-xlb-https-fwd-rule-name = "apigee-xlb-https-fwd-rule"
 
+// apigee_billing_type: The billing type for Apigee.
 apigee_billing_type = "PAYG"
 
+// apigee-vpc-fw-xlb-https-ingress-name: The name of the VPC firewall rule for XLB HTTPS ingress.
 apigee-vpc-fw-xlb-https-ingress-name = "apigee-vpc-fw-xlb-https-ingress"
 
+// apigee-vpc-fw-hneg-http-ingress-name: The name of the VPC firewall rule for HNEG HTTP ingress.
 apigee-vpc-fw-hneg-http-ingress-name = "apigee-vpc-fw-hneg-http-ingress"
 
+// apigee-vpc-fw-psc-https-egress-name: The name of the VPC firewall rule for PSC HTTPS egress.
 apigee-vpc-fw-psc-https-egress-name = "apigee-vpc-fw-psc-https-egress"
 
+// apigee-vpc-fw-allow-health-check-ingress-name: The name of the VPC firewall rule for allowing health check ingress.
 apigee-vpc-fw-allow-health-check-ingress-name = "apigee-vpc-fw-allow-health-check-ingress"
 
+// apigee-vpc-fw-allow-health-check-ipv6-ingress-name: The name of the VPC firewall rule for allowing health check IPv6 ingress.
 apigee-vpc-fw-allow-health-check-ipv6-ingress-name = "apigee-vpc-fw-allow-health-check-ipv6-ingress"
 
+// psc_ingress_network: The name of the PSC ingress network. (Commented out by default)
 # psc_ingress_network = "psc-ingress-vpc"
 
+// psc_ingress_subnets: Defines PSC ingress subnets. (Commented out by default)
 # psc_ingress_subnets = [
 #   {
 #     name               = "apigee-psc-usw1"
