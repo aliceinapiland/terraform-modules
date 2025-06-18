@@ -80,6 +80,10 @@ resource "google_compute_network" "main_network" {
 #    Create apigee northbound VPC subnets for regions
 # ------------------------------------------------------------------------------
 
+# ----------
+# Region 1
+# ----------
+
 resource "google_compute_subnetwork" "region1-subnet" {
   name = var.region1-subnet-name
   region = var.region1
@@ -99,10 +103,37 @@ resource "google_compute_subnetwork" "region1-proxy_only_subnet" {
   role = "ACTIVE"
 }
 
+# ----------
+# Region 2
+# ----------
+
+resource "google_compute_subnetwork" "region2-subnet" {
+  name = var.region2-subnet-name
+  region = var.region2
+  project = var.project_id
+  network = google_compute_network.main_network.self_link
+  ip_cidr_range = var.region2-subnet-iprange
+  private_ip_google_access = true
+}
+
+resource "google_compute_subnetwork" "region2-proxy_only_subnet" {
+  name = var.region2-proxy_only_subnet_name
+  region = var.region2
+  project = var.project_id
+  network = google_compute_network.main_network.self_link
+  ip_cidr_range = var.region2-pos-iprange
+  purpose = "REGIONAL_MANAGED_PROXY"
+  role = "ACTIVE"
+}
+
 # ------------------------------------------------------------------------------
 # 3. PSC NETWORK ENDPOINT GROUP (NEG)
 #    Points to your service via a Service Attachment.
 # ------------------------------------------------------------------------------
+
+# ----------
+# Region 1
+# ----------
 
 resource "google_compute_region_network_endpoint_group" "region1-psc_neg" {
   project                  = var.project_id
@@ -112,6 +143,23 @@ resource "google_compute_region_network_endpoint_group" "region1-psc_neg" {
   subnetwork               = google_compute_subnetwork.region1-subnet.self_link
   network_endpoint_type    = "PRIVATE_SERVICE_CONNECT"
   psc_target_service       = module.apigee-x-core.instance_service_attachments[var.region1]
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# ----------
+# Region 2
+# ----------
+
+resource "google_compute_region_network_endpoint_group" "region2-psc_neg" {
+  project                  = var.project_id
+  name                     = var.region2-psc-neg-name
+  region                   = var.region2
+  network                  = google_compute_network.main_network.self_link
+  subnetwork               = google_compute_subnetwork.region2-subnet.self_link
+  network_endpoint_type    = "PRIVATE_SERVICE_CONNECT"
+  psc_target_service       = module.apigee-x-core.instance_service_attachments[var.region2]
   lifecycle {
     create_before_destroy = true
   }
@@ -131,6 +179,10 @@ resource "google_compute_region_network_endpoint_group" "region1-psc_neg" {
 #     port_specification = "USE_SERVING_PORT"
 #   }
 # }
+
+# ----------
+# Region 1
+# ----------
 
 ## 4a. Regional Backend Service for Internal LB
 resource "google_compute_region_backend_service" "region1-ilb-bes" {
@@ -189,10 +241,75 @@ resource "google_compute_forwarding_rule" "region1-ilb-forwardingrule" {
   allow_global_access   = false
 }
 
+# ----------
+# Region 2
+# ----------
+
+## 4a. Regional Backend Service for Internal LB
+resource "google_compute_region_backend_service" "region2-ilb-bes" {
+  project                  = var.project_id
+  name                     = var.region2-ilb-bes-name
+  region                   = var.region2
+  protocol                 = "HTTPS" # Internal communication protocol
+  load_balancing_scheme    = "INTERNAL_MANAGED"
+
+  backend {
+    group          = google_compute_region_network_endpoint_group.region2-psc_neg.id
+    balancing_mode = "UTILIZATION"
+  }
+}
+
+## 4b. Regional URL Map for Internal LB
+resource "google_compute_region_url_map" "region2-ilb-urlmap" {
+  project         = var.project_id
+  name            = var.region2-ilb-urlmap-name
+  region          = var.region2
+  default_service = google_compute_region_backend_service.region2-ilb-bes.id
+}
+
+## 4c. Regional Target HTTP Proxy for Internal LB
+resource "google_compute_region_target_http_proxy" "region2-ilb-targetproxy" {
+  project = var.project_id
+  name    = var.region2-ilb-targetproxy-name
+  region  = var.region2
+  url_map = google_compute_region_url_map.region2-ilb-urlmap.id
+}
+
+## 4d. Front end IP address for Internal LB
+resource "google_compute_address" "region2-ilb-ip" {
+    name         = var.region2-ilb-ip-name
+    project      = var.project_id
+    region       = var.region2
+    subnetwork   = google_compute_subnetwork.region2-subnet.self_link
+    address_type = "INTERNAL"  # or "INTERNAL" for internal load balancers
+}
+
+
+## 4e. Regional Forwarding Rule for Internal LB
+resource "google_compute_forwarding_rule" "region2-ilb-forwardingrule" {
+  project               = var.project_id
+  name                  = var.region2-ilb-forwardingrule-name
+  region                = var.region2
+  ip_address            = google_compute_address.region2-ilb-ip.id
+  ip_protocol           = "TCP"
+  load_balancing_scheme = "INTERNAL_MANAGED"
+  all_ports             = false
+  port_range            = var.region2-ilb-port # Internal LB listens on this HTTP port
+  target                = google_compute_region_target_http_proxy.region2-ilb-targetproxy.id
+  network               = google_compute_network.main_network.self_link
+  subnetwork            = google_compute_subnetwork.region2-subnet.self_link
+  network_tier          = "PREMIUM"
+  allow_global_access   = false
+}
+
 # ------------------------------------------------------------------------------
 # 5. HYBRID NETWORK ENDPOINT GROUP (NEG)
 #    Packages the IP and port of the Regional Internal ALB.
 # ------------------------------------------------------------------------------
+
+# ----------
+# Region 1
+# ----------
 
 ## 5a. Network Endpoint Group for the Hybrid NEG
 resource "google_compute_network_endpoint_group" "region1-hybrid-neg" {
@@ -211,6 +328,29 @@ resource "google_compute_network_endpoint" "region1-hybrid-neg-endpoint" {
   zone                    = var.region1-zone1
   ip_address              = google_compute_forwarding_rule.region1-ilb-forwardingrule.ip_address
   port                    = var.region1-ilb-port # Points to the internal LB's HTTP port
+}
+
+# ----------
+# Region 2
+# ----------
+
+## 5a. Network Endpoint Group for the Hybrid NEG
+resource "google_compute_network_endpoint_group" "region2-hybrid-neg" {
+  project                 = var.project_id
+  name                    = var.region2-hybrid-neg-name
+  zone                    = var.region2-zone1
+  network                 = google_compute_network.main_network.self_link
+  network_endpoint_type   = "NON_GCP_PRIVATE_IP_PORT"
+  default_port            = var.region2-ilb-port # Points to the internal LB's HTTP port
+}
+
+## 5b. Network Endpoint for the Hybrid NEG
+resource "google_compute_network_endpoint" "region2-hybrid-neg-endpoint" {
+  project                 = var.project_id
+  network_endpoint_group  = google_compute_network_endpoint_group.region2-hybrid-neg.self_link
+  zone                    = var.region2-zone1
+  ip_address              = google_compute_forwarding_rule.region2-ilb-forwardingrule.ip_address
+  port                    = var.region2-ilb-port # Points to the internal LB's HTTP port
 }
 
 # ------------------------------------------------------------------------------
@@ -258,6 +398,11 @@ resource "google_compute_backend_service" "apigee-xlb-bes" {
 
   backend {
     group                   = google_compute_network_endpoint_group.region1-hybrid-neg.id
+    balancing_mode          = "RATE"
+    max_rate_per_endpoint   = 100
+  }
+  backend {
+    group                   = google_compute_network_endpoint_group.region2-hybrid-neg.id
     balancing_mode          = "RATE"
     max_rate_per_endpoint   = 100
   }
@@ -335,7 +480,7 @@ resource "google_compute_firewall" "apigee-vpc-fw-psc-https-egress" {
     protocol = "tcp"
     ports    = [443]
   }
-  source_ranges = ["${google_compute_address.region1-ilb-ip.address}/32"]
+  source_ranges = ["${google_compute_address.region1-ilb-ip.address}/32", "${google_compute_address.region2-ilb-ip.address}/32"]
   destination_ranges = ["10.0.0.0/8"]
 }
 
@@ -348,6 +493,6 @@ resource "google_compute_firewall" "apigee-vpc-fw-health-check-ingress" {
     protocol = "tcp"
   }
   source_ranges = ["35.191.0.0/16", "130.211.0.0/22", "209.85.152.0/22", "209.85.204.0/22"]
-  destination_ranges = ["${google_compute_global_address.apigee-xlb-ip.address}/32", "${google_compute_address.region1-ilb-ip.address}/32"]
+  destination_ranges = ["${google_compute_global_address.apigee-xlb-ip.address}/32", "${google_compute_address.region1-ilb-ip.address}/32", "${google_compute_address.region2-ilb-ip.address}/32"]
 }
 

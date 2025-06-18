@@ -21,6 +21,10 @@ apigee_instances = {
     region       = "us-east1"
     environments = ["dev-env", "test-env"]
   }
+  usw1-inst = {
+    region       = "us-west1"
+    environments = ["dev-env", "test-env"]
+  }
 }
 
 apigee_environments = {
@@ -48,19 +52,19 @@ apigee_envgroups = {
   }
 }
 
+network_name = "apigee-nb-nw"
+
+# Region 1 Variables
+
 region1 = "us-east1"
 
 region1-zone1 = "us-east1-b"
-
-network_name = "apigee-nb-nw"
 
 region1-subnet-name = "apigee-nb-nw-subnet-us-east1"
 
 region1-subnet-iprange = "10.1.0.0/23"
 
 region1-pos-iprange = "10.3.0.0/23"
-
-us-west1-subnet-name = "apigee-nb-nw-subnet-us-west1"
 
 region1-proxy_only_subnet_name = "apigee-nb-nw-us-east1-pos"
 
@@ -83,6 +87,40 @@ region1-ilb-ip-name = "apigee-us-east1-ilb-ip"
 region1-ilb-forwardingrule-name = "apigee-us-east1-ilb-forwardingrule"
 
 region1-hybrid-neg-name = "apigee-us-east1-hybrid-neg"
+
+# Region 2 Variables
+
+region2 = "us-west1"
+
+region2-zone1 = "us-west1-b"
+
+region2-subnet-name = "apigee-nb-nw-subnet-us-west1"
+
+region2-subnet-iprange = "10.2.0.0/23"
+
+region2-pos-iprange = "10.4.0.0/23"
+
+region2-proxy_only_subnet_name = "apigee-nb-nw-us-west1-pos"
+
+region2-psc-neg-name = "apigee-us-west1-psc-neg"
+
+region2-apigee-psc_target_service_attachment_uri = "projects/p54d5feba6873adbap-tp/regions/us-west1/serviceAttachments/apigee-us-west1-eaxq"
+
+region2-ilb-hc-name = "apigee-us-west1-ilb-hc"
+
+region2-ilb-bes-name = "apigee-us-west1-ilb-bes"
+
+region2-ilb-port = 80
+
+region2-ilb-urlmap-name = "apigee-us-west1-ilb-urlmap"
+
+region2-ilb-targetproxy-name = "apigee-us-west1-ilb-targetproxy"
+
+region2-ilb-ip-name = "apigee-us-west1-ilb-ip"
+
+region2-ilb-forwardingrule-name = "apigee-us-west1-ilb-forwardingrule"
+
+region2-hybrid-neg-name = "apigee-us-west1-hybrid-neg"
 
 apigee-xlb-port = 443
 

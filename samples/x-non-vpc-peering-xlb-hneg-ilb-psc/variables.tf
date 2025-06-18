@@ -83,6 +83,14 @@ variable "apigee_environments" {
 * Below are the variables required for creating XLB -> Hybrid NEG -> Regional ILB -> PSC NEG -> Apigee PSC Service Attachment.
 */
 
+variable "network_name" {
+  description = "The name of the VPC network to create."
+  type        = string
+  default     = "apigee-nb-nw"
+}
+
+# Region 1 variables
+
 variable "region1" {
   description = "The GCP region for regional resources (e.g., 'us-central1')."
   type        = string
@@ -95,12 +103,6 @@ variable "region1-zone1" {
   default     = "us-east1-b"
 }
 
-variable "network_name" {
-  description = "The name of the VPC network to create."
-  type        = string
-  default     = "apigee-nb-nw"
-}
-
 variable "region1-subnet-name" {
   description = "The name of the VPC network to create."
   type        = string
@@ -108,21 +110,15 @@ variable "region1-subnet-name" {
 }
 
 variable "region1-subnet-iprange" {
-  description = "IP range for us-east1 subnet"
+  description = "IP range for region 1 subnet"
   type = string
   default = "10.1.0.0/23"
 }
 
 variable "region1-pos-iprange" {
-  description = "IP range for us-east1 proxy only subnet"
+  description = "IP range for region 1 proxy only subnet"
   type = string
   default = "10.3.0.0/23"
-}
-
-variable "us-west1-subnet-name" {
-  description = "The name of the VPC network to create."
-  type        = string
-  default     = "apigee-nb-nw-subnet-us-west1"
 }
 
 variable "region1-proxy_only_subnet_name" {
@@ -132,7 +128,7 @@ variable "region1-proxy_only_subnet_name" {
 }
 
 variable "region1-psc-neg-name" {
-  description = "Name of the us-east1 PSC NEG that points to Apigee us-east1 Instance"
+  description = "Name of the region 1 PSC NEG that points to Apigee region 1 Instance"
   type = string
   default = "apigee-us-east1-psc-neg"
 }
@@ -190,6 +186,105 @@ variable "region1-hybrid-neg-name" {
     description = "Name of region 1 Hybrid NEG"
     type = string
     default = "apigee-us-east1-hybrid-neg"
+}
+
+# Region 2 variables
+
+variable "region2" {
+  description = "The GCP region for regional resources (e.g., 'us-central1')."
+  type        = string
+  default     = "us-west1"
+}
+
+variable "region2-zone1" {
+  description = "The GCP zone for the Hybrid NEG (e.g., 'us-central1-a'). This should be a zone within the specified region."
+  type        = string
+  default     = "us-west1-b"
+}
+
+variable "region2-subnet-name" {
+  description = "The name of the VPC network to create."
+  type        = string
+  default     = "apigee-nb-nw-subnet-us-west1"
+}
+
+variable "region2-subnet-iprange" {
+  description = "IP range for region 2 subnet"
+  type = string
+  default = "10.2.0.0/23"
+}
+
+variable "region2-pos-iprange" {
+  description = "IP range for region 2 proxy only subnet"
+  type = string
+  default = "10.4.0.0/23"
+}
+
+variable "region2-proxy_only_subnet_name" {
+  description = "The name of the proxy-only subnet in the specified region. Required for the Regional Internal Application Load Balancer."
+  type        = string
+  default     = "apigee-nb-nw-us-west1-pos"
+}
+
+variable "region2-psc-neg-name" {
+  description = "Name of the region 2 PSC NEG that points to Apigee region 2 Instance"
+  type = string
+  default = "apigee-us-west1-psc-neg"
+}
+
+variable "region2-apigee-psc_target_service_attachment_uri" {
+  description = "The URI of the target Service Attachment for the PSC NEG."
+  type        = string
+  default     = "projects/p54d5feba6873adbap-tp/regions/us-west1/serviceAttachments/apigee-us-west1-eaxq"
+  # Example: "projects/SERVICE_PRODUCER_PROJECT/regions/REGION/serviceAttachments/MY_SERVICE_ATTACHMENT"
+}
+
+variable "region2-ilb-hc-name" {
+    description = "Name of region 2 ILB healthcheck"
+    type = string
+    default = "apigee-us-west1-ilb-hc"
+}
+
+variable "region2-ilb-bes-name" {
+    description = "Name of the region 2 ILB backend service"
+    type = string
+    default = "apigee-us-west1-ilb-bes"
+}
+
+variable "region2-ilb-port" {
+  description = "Port for the Regional Internal Application Load Balancer and Hybrid NEG endpoint (backend communication)."
+  type        = number
+  default     = 80
+}
+
+variable "region2-ilb-urlmap-name" {
+  description = "Name of region 2 ILB url map"
+  type = string
+  default = "apigee-us-west1-ilb-urlmap"
+}
+
+variable "region2-ilb-targetproxy-name" {
+    description = "Name of region 2 ILB target proxy"
+    type = string
+    default = "apigee-us-west1-ilb-targetproxy"
+}
+
+variable "region2-ilb-ip-name" {
+    description = "Name of region 2 ILB IP address"
+    type = string
+    default = "apigee-us-west1-ilb-ip"
+}
+
+variable "region2-ilb-forwardingrule-name" {
+    description = "Name of region 2 ILB forwarding rule"
+    type = string
+    default = "apigee-us-west1-ilb-forwardingrule"
+}
+
+variable "region2-hybrid-neg-name" {
+    description = "Name of region 2 Hybrid NEG"
+    type = string
+    default = "apigee-us-west1-hybrid-neg"
 }
 
 
