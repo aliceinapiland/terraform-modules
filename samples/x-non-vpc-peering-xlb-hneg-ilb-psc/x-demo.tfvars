@@ -34,7 +34,7 @@ apigee_environments = {
     node_config  = null
     iam          = null
     envgroups    = ["test-env-grp"]
-    type         = null
+    type         = "COMPREHENSIVE"
   }
   test-env = {
     display_name = "Test-Env"
@@ -42,7 +42,7 @@ apigee_environments = {
     node_config  = null
     iam          = null
     envgroups    = ["test-env-grp"]
-    type         = null
+    type         = "COMPREHENSIVE"
   }
 }
 

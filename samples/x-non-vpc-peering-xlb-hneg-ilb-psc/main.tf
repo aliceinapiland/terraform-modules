@@ -191,6 +191,9 @@ resource "google_compute_region_backend_service" "region1-ilb-bes" {
   region                   = var.region1
   protocol                 = "HTTPS" # Internal communication protocol
   load_balancing_scheme    = "INTERNAL_MANAGED"
+  log_config {
+    enable = true
+  }
 
   backend {
     group          = google_compute_region_network_endpoint_group.region1-psc_neg.id
@@ -252,6 +255,9 @@ resource "google_compute_region_backend_service" "region2-ilb-bes" {
   region                   = var.region2
   protocol                 = "HTTPS" # Internal communication protocol
   load_balancing_scheme    = "INTERNAL_MANAGED"
+  log_config {
+    enable = true
+  }
 
   backend {
     group          = google_compute_region_network_endpoint_group.region2-psc_neg.id
@@ -384,6 +390,9 @@ resource "google_compute_health_check" "apigee-xlb-hc-tcp" {
   check_interval_sec  = 5
   healthy_threshold   = 2
   unhealthy_threshold = 2
+  log_config {
+    enable = true
+  }
 }
 
 ## 6d. Global Backend Service for External LB
@@ -395,6 +404,9 @@ resource "google_compute_backend_service" "apigee-xlb-bes" {
   port_name                = "http" # Named port for backend service
   load_balancing_scheme    = "EXTERNAL_MANAGED"
   health_checks            = [google_compute_health_check.apigee-xlb-hc-tcp.id]
+  log_config {
+    enable = true
+  }
 
   backend {
     group                   = google_compute_network_endpoint_group.region1-hybrid-neg.id
@@ -456,6 +468,9 @@ resource "google_compute_firewall" "apigee-vpc-fw-xlb-https-ingress" {
   }
   source_ranges = ["0.0.0.0/0"]
   destination_ranges = ["${google_compute_global_address.apigee-xlb-ip.address}/32"]
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }
 
 resource "google_compute_firewall" "apigee-vpc-fw-hneg-http-ingress" {
@@ -469,6 +484,9 @@ resource "google_compute_firewall" "apigee-vpc-fw-hneg-http-ingress" {
   }
   source_ranges = ["${google_compute_global_address.apigee-xlb-ip.address}/32"]
   destination_ranges = ["${google_compute_subnetwork.region1-subnet.ip_cidr_range}"]
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }
 
 resource "google_compute_firewall" "apigee-vpc-fw-psc-https-egress" {
@@ -482,6 +500,9 @@ resource "google_compute_firewall" "apigee-vpc-fw-psc-https-egress" {
   }
   source_ranges = ["${google_compute_address.region1-ilb-ip.address}/32", "${google_compute_address.region2-ilb-ip.address}/32"]
   destination_ranges = ["10.0.0.0/8"]
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }
 
 resource "google_compute_firewall" "apigee-vpc-fw-health-check-ingress" {
@@ -494,5 +515,8 @@ resource "google_compute_firewall" "apigee-vpc-fw-health-check-ingress" {
   }
   source_ranges = ["35.191.0.0/16", "130.211.0.0/22", "209.85.152.0/22", "209.85.204.0/22"]
   destination_ranges = ["${google_compute_global_address.apigee-xlb-ip.address}/32", "${google_compute_address.region1-ilb-ip.address}/32", "${google_compute_address.region2-ilb-ip.address}/32"]
+  log_config {
+    metadata = "INCLUDE_ALL_METADATA"
+  }
 }
 
