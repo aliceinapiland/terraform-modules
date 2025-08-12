@@ -287,6 +287,205 @@ variable "region2-hybrid-neg-name" {
     default = "apigee-us-west1-hybrid-neg"
 }
 
+# Region 3 variables
+
+variable "region3" {
+  description = "The GCP region for regional resources (e.g., 'us-central1')."
+  type        = string
+  default     = "us-east4"
+}
+
+variable "region3-zone1" {
+  description = "The GCP zone for the Hybrid NEG (e.g., 'us-central1-a'). This should be a zone within the specified region."
+  type        = string
+  default     = "us-east4-a"
+}
+
+variable "region3-subnet-name" {
+  description = "The name of the VPC network to create."
+  type        = string
+  default     = "apigee-nb-nw-subnet-us-east4"
+}
+
+variable "region3-subnet-iprange" {
+  description = "IP range for region 3 subnet"
+  type = string
+  default = "10.5.0.0/23"
+}
+
+variable "region3-pos-iprange" {
+  description = "IP range for region 3 proxy only subnet"
+  type = string
+  default = "10.6.0.0/23"
+}
+
+variable "region3-proxy_only_subnet_name" {
+  description = "The name of the proxy-only subnet in the specified region. Required for the Regional Internal Application Load Balancer."
+  type        = string
+  default     = "apigee-nb-nw-us-east4-pos"
+}
+
+variable "region3-psc-neg-name" {
+  description = "Name of the region 3 PSC NEG that points to Apigee region 3 Instance"
+  type = string
+  default = "apigee-us-east4-psc-neg"
+}
+
+variable "region3-apigee-psc_target_service_attachment_uri" {
+  description = "The URI of the target Service Attachment for the PSC NEG."
+  type        = string
+  default     = "projects/p54d5feba6873adbap-tp/regions/us-west1/serviceAttachments/apigee-us-west1-eaxq"
+  # Example: "projects/SERVICE_PRODUCER_PROJECT/regions/REGION/serviceAttachments/MY_SERVICE_ATTACHMENT"
+}
+
+variable "region3-ilb-hc-name" {
+    description = "Name of region 3 ILB healthcheck"
+    type = string
+    default = "apigee-us-east4-ilb-hc"
+}
+
+variable "region3-ilb-bes-name" {
+    description = "Name of the region 3 ILB backend service"
+    type = string
+    default = "apigee-us-east4-ilb-bes"
+}
+
+variable "region3-ilb-port" {
+  description = "Port for the Regional Internal Application Load Balancer and Hybrid NEG endpoint (backend communication)."
+  type        = number
+  default     = 80
+}
+
+variable "region3-ilb-urlmap-name" {
+  description = "Name of region 3 ILB url map"
+  type = string
+  default = "apigee-us-east4-ilb-urlmap"
+}
+
+variable "region3-ilb-targetproxy-name" {
+    description = "Name of region 3 ILB target proxy"
+    type = string
+    default = "apigee-us-east4-ilb-targetproxy"
+}
+
+variable "region3-ilb-ip-name" {
+    description = "Name of region 3 ILB IP address"
+    type = string
+    default = "apigee-us-east4-ilb-ip"
+}
+
+variable "region3-ilb-forwardingrule-name" {
+    description = "Name of region 3 ILB forwarding rule"
+    type = string
+    default = "apigee-us-east4-ilb-forwardingrule"
+}
+
+variable "region3-hybrid-neg-name" {
+    description = "Name of region 3 Hybrid NEG"
+    type = string
+    default = "apigee-us-east4-hybrid-neg"
+}
+
+# Region 4 variables
+
+variable "region4" {
+  description = "The GCP region for regional resources (e.g., 'us-central1')."
+  type        = string
+  default     = "us-east5"
+}
+
+variable "region4-zone1" {
+  description = "The GCP zone for the Hybrid NEG (e.g., 'us-central1-a'). This should be a zone within the specified region."
+  type        = string
+  default     = "us-east5-b"
+}
+
+variable "region4-subnet-name" {
+  description = "The name of the VPC network to create."
+  type        = string
+  default     = "apigee-nb-nw-subnet-us-east5"
+}
+
+variable "region4-subnet-iprange" {
+  description = "IP range for region 4 subnet"
+  type = string
+  default = "10.7.0.0/23"
+}
+
+variable "region4-pos-iprange" {
+  description = "IP range for region 4 proxy only subnet"
+  type = string
+  default = "10.8.0.0/23"
+}
+
+variable "region4-proxy_only_subnet_name" {
+  description = "The name of the proxy-only subnet in the specified region. Required for the Regional Internal Application Load Balancer."
+  type        = string
+  default     = "apigee-nb-nw-us-east5-pos"
+}
+
+variable "region4-psc-neg-name" {
+  description = "Name of the region 4 PSC NEG that points to Apigee region 2 Instance"
+  type = string
+  default = "apigee-us-east5-psc-neg"
+}
+
+variable "region4-apigee-psc_target_service_attachment_uri" {
+  description = "The URI of the target Service Attachment for the PSC NEG."
+  type        = string
+  default     = "projects/p54d5feba6873adbap-tp/regions/us-west1/serviceAttachments/apigee-us-west1-eaxq"
+  # Example: "projects/SERVICE_PRODUCER_PROJECT/regions/REGION/serviceAttachments/MY_SERVICE_ATTACHMENT"
+}
+
+variable "region4-ilb-hc-name" {
+    description = "Name of region 4 ILB healthcheck"
+    type = string
+    default = "apigee-us-east5-ilb-hc"
+}
+
+variable "region4-ilb-bes-name" {
+    description = "Name of the region 4 ILB backend service"
+    type = string
+    default = "apigee-us-east5-ilb-bes"
+}
+
+variable "region4-ilb-port" {
+  description = "Port for the Regional Internal Application Load Balancer and Hybrid NEG endpoint (backend communication)."
+  type        = number
+  default     = 80
+}
+
+variable "region4-ilb-urlmap-name" {
+  description = "Name of region 4 ILB url map"
+  type = string
+  default = "apigee-us-east5-ilb-urlmap"
+}
+
+variable "region4-ilb-targetproxy-name" {
+    description = "Name of region 4 ILB target proxy"
+    type = string
+    default = "apigee-us-east5-ilb-targetproxy"
+}
+
+variable "region4-ilb-ip-name" {
+    description = "Name of region 4 ILB IP address"
+    type = string
+    default = "apigee-us-east5-ilb-ip"
+}
+
+variable "region4-ilb-forwardingrule-name" {
+    description = "Name of region 4 ILB forwarding rule"
+    type = string
+    default = "apigee-us-east5-ilb-forwardingrule"
+}
+
+variable "region4-hybrid-neg-name" {
+    description = "Name of region 4 Hybrid NEG"
+    type = string
+    default = "apigee-us-east5-hybrid-neg"
+}
+
+# External LB variables
 
 variable "apigee-xlb-port" {
   description = "Port for the External HTTPS Application Load Balancer (frontend)."

@@ -25,6 +25,14 @@ apigee_instances = {
     region       = "us-west1"
     environments = ["dev-env", "test-env"]
   }
+  use4-inst = {
+    region       = "us-east4"
+    environments = ["dev-env", "test-env"]
+  }
+  use5-inst = {
+    region       = "us-east5"
+    environments = ["dev-env", "test-env"]
+  }
 }
 
 apigee_environments = {
@@ -121,6 +129,76 @@ region2-ilb-ip-name = "apigee-us-west1-ilb-ip"
 region2-ilb-forwardingrule-name = "apigee-us-west1-ilb-forwardingrule"
 
 region2-hybrid-neg-name = "apigee-us-west1-hybrid-neg"
+
+# Region 3 Variables
+
+region3 = "us-east4"
+
+region3-zone1 = "us-east4-a"
+
+region3-subnet-name = "apigee-nb-nw-subnet-us-east4"
+
+region3-subnet-iprange = "10.5.0.0/23"
+
+region3-pos-iprange = "10.6.0.0/23"
+
+region3-proxy_only_subnet_name = "apigee-nb-nw-us-east4-pos"
+
+region3-psc-neg-name = "apigee-us-east4-psc-neg"
+
+region3-apigee-psc_target_service_attachment_uri = "projects/p54d5feba6873adbap-tp/regions/us-west1/serviceAttachments/apigee-us-west1-eaxq"
+
+region3-ilb-hc-name = "apigee-us-east4-ilb-hc"
+
+region3-ilb-bes-name = "apigee-us-east4-ilb-bes"
+
+region3-ilb-port = 80
+
+region3-ilb-urlmap-name = "apigee-us-east4-ilb-urlmap"
+
+region3-ilb-targetproxy-name = "apigee-us-east4-ilb-targetproxy"
+
+region3-ilb-ip-name = "apigee-us-east4-ilb-ip"
+
+region3-ilb-forwardingrule-name = "apigee-us-east4-ilb-forwardingrule"
+
+region3-hybrid-neg-name = "apigee-us-east4-hybrid-neg"
+
+# Region 4 Variables
+
+region4 = "us-east5"
+
+region4-zone1 = "us-east5-b"
+
+region4-subnet-name = "apigee-nb-nw-subnet-us-east5"
+
+region4-subnet-iprange = "10.7.0.0/23"
+
+region4-pos-iprange = "10.8.0.0/23"
+
+region4-proxy_only_subnet_name = "apigee-nb-nw-us-east5-pos"
+
+region4-psc-neg-name = "apigee-us-east5-psc-neg"
+
+region4-apigee-psc_target_service_attachment_uri = "projects/p54d5feba6873adbap-tp/regions/us-west1/serviceAttachments/apigee-us-west1-eaxq"
+
+region4-ilb-hc-name = "apigee-us-east5-ilb-hc"
+
+region4-ilb-bes-name = "apigee-us-east5-ilb-bes"
+
+region4-ilb-port = 80
+
+region4-ilb-urlmap-name = "apigee-us-east5-ilb-urlmap"
+
+region4-ilb-targetproxy-name = "apigee-us-east5-ilb-targetproxy"
+
+region4-ilb-ip-name = "apigee-us-east5-ilb-ip"
+
+region4-ilb-forwardingrule-name = "apigee-us-east5-ilb-forwardingrule"
+
+region4-hybrid-neg-name = "apigee-us-east5-hybrid-neg"
+
+# XLB Variables
 
 apigee-xlb-port = 443
 

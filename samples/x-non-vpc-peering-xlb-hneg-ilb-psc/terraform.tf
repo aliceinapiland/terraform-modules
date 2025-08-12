@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket  = "$PROJECT_ID-tf"
+    bucket  = "vr-cat-tf-demo-tf"
     prefix  = "terraform/state"
   }
 }
