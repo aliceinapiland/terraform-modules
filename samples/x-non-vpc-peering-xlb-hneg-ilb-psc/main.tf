@@ -321,7 +321,7 @@ resource "google_compute_forwarding_rule" "region1-ilb-forwardingrule" {
   network               = google_compute_network.main_network.self_link
   subnetwork            = google_compute_subnetwork.region1-subnet.self_link
   network_tier          = "PREMIUM"
-  allow_global_access   = false
+  allow_global_access   = true
 }
 
 # ----------
@@ -385,7 +385,7 @@ resource "google_compute_forwarding_rule" "region2-ilb-forwardingrule" {
   network               = google_compute_network.main_network.self_link
   subnetwork            = google_compute_subnetwork.region2-subnet.self_link
   network_tier          = "PREMIUM"
-  allow_global_access   = false
+  allow_global_access   = true
 }
 
 # ----------
@@ -449,7 +449,7 @@ resource "google_compute_forwarding_rule" "region3-ilb-forwardingrule" {
   network               = google_compute_network.main_network.self_link
   subnetwork            = google_compute_subnetwork.region3-subnet.self_link
   network_tier          = "PREMIUM"
-  allow_global_access   = false
+  allow_global_access   = true
 }
 
 # ----------
@@ -513,7 +513,7 @@ resource "google_compute_forwarding_rule" "region4-ilb-forwardingrule" {
   network               = google_compute_network.main_network.self_link
   subnetwork            = google_compute_subnetwork.region4-subnet.self_link
   network_tier          = "PREMIUM"
-  allow_global_access   = false
+  allow_global_access   = true
 }
 
 # ------------------------------------------------------------------------------
@@ -665,22 +665,23 @@ resource "google_compute_backend_service" "apigee-xlb-bes" {
   backend {
     group                   = google_compute_network_endpoint_group.region1-hybrid-neg.id
     balancing_mode          = "RATE"
-    max_rate_per_endpoint   = 100
+    max_rate_per_endpoint   = 1000
+    preference              = "PREFERRED"
   }
   backend {
     group                   = google_compute_network_endpoint_group.region2-hybrid-neg.id
     balancing_mode          = "RATE"
-    max_rate_per_endpoint   = 100
+    max_rate_per_endpoint   = 1000
   }
   backend {
     group                   = google_compute_network_endpoint_group.region3-hybrid-neg.id
     balancing_mode          = "RATE"
-    max_rate_per_endpoint   = 100
+    max_rate_per_endpoint   = 1000
   }
   backend {
     group                   = google_compute_network_endpoint_group.region4-hybrid-neg.id
     balancing_mode          = "RATE"
-    max_rate_per_endpoint   = 100
+    max_rate_per_endpoint   = 1000
   }
 }
 
